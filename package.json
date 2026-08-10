@@ -45,7 +45,7 @@
     "dayjs": "^1.11.10",
     "embla-carousel-react": "^8.6.0",
     "lucide-react": "^0.501.0",
-    "nanoid": "^5.0.4",
+    "nanoid": "^5.1.16",
     "negotiator": "^0.6.3",
     "next": "^16.0.7",
     "next-intl": "^4.5.8",
