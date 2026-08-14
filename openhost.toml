@@ -1,7 +1,7 @@
 [app]
 name = "spliit"
 version = "0.1.0"
-description = "Spliit — a minimalist shared-expense / bill-splitting app, packaged for OpenHost with owner SSO and public group-link sharing."
+description = "Spliit — a minimalist shared-expense / bill-splitting app, packaged for Cloud in a Bottle with owner SSO and public group-link sharing."
 authors = ["Andrew Laack <andrew@laack.co>"]
 
 [runtime.container]
