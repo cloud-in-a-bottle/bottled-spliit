@@ -1,7 +1,7 @@
 # bottled-spliit
 
-[Spliit](https://github.com/spliit-app/spliit) — a minimalist, account-free
-app for sharing expenses with friends and family — packaged as a single,
+[Spliit](https://github.com/spliit-app/spliit), a minimalist, account-free
+app for sharing expenses with friends and family, packaged as a single,
 self-contained [Cloud in a Bottle](https://openhost.ai) application.
 
 This repo vendors the upstream Spliit source (MIT-licensed) and adds an
@@ -14,7 +14,7 @@ script, and a small auth-proxy that terminates Cloud in a Bottle SSO / owner-gat
   (even split, by shares, by percentage, by amount), reimbursements,
   recurring expenses, balances, "who owes whom" suggested reimbursements,
   activity log, stats, per-group settings, and CSV / JSON export.
-- A bundled PostgreSQL 16 database. Nothing external to provision — all
+- A bundled PostgreSQL 16 database. Nothing external to provision; all
   data lives on the Cloud in a Bottle persistent volume.
 - Cloud in a Bottle single-sign-on for the instance owner and public, no-login
   sharing of individual groups by link.
@@ -37,7 +37,7 @@ session table to seed, so the Cloud in a Bottle integration is deliberately simp
   lets those requests through without `zone_auth`.
 
 Because group IDs are unguessable nanoids, "knowing the URL" is the sharing
-credential — this matches the public hosted Spliit at spliit.app. Creating a
+credential, this matches the public hosted Spliit at spliit.app. Creating a
 *new* group, however, is restricted to the owner (see the auth-proxy section
 below): unlike the public hosted Spliit, an anonymous visitor cannot spin up
 new groups on your instance. If you want a fully private instance (no
@@ -64,8 +64,8 @@ the Cloud in a Bottle router (via `public_paths`); the proxy's jobs are:
    `groups.create` mutation under `/api/`. For those specific paths the
    proxy checks the router-stamped `X-OpenHost-Is-Owner` header and either
    bounces anonymous visitors to the Cloud in a Bottle login (pages) or returns a
-   403 (the create API). Everything else a shared group needs — reading a
-   group, adding/editing/deleting expenses, balances, stats, export — stays
+   403 (the create API). Everything else a shared group needs, reading a
+   group, adding/editing/deleting expenses, balances, stats, export, stays
    public so anyone with the link can use the group fully.
 
 The proxy reads each request and upstream response body fully into memory and
@@ -102,3 +102,8 @@ brings up Postgres, applies migrations, and serves the app on port 8080.
 Spliit is created by [Sebastien Castiel](https://github.com/scastiel) and
 contributors, and is MIT-licensed (see `LICENSE`). This repo only adds the
 Cloud in a Bottle packaging layer.
+
+## License
+
+Spliit and this Cloud in a Bottle packaging are both MIT-licensed. See `LICENSE`
+and `NOTICE` for details.
