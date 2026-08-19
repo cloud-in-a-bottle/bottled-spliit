@@ -326,6 +326,16 @@ class ProxyHandler(BaseHTTPRequestHandler):
                 self.send_header(key, value)
             if self.command != "HEAD":
                 self.send_header("Content-Length", str(len(payload)))
+            # Security headers: Next.js does not send these by default.
+            # Use the ? pattern (only set if not already present in the
+            # upstream response) so a future Next.js version can override.
+            _resp_headers_lower = {k.lower() for k, _ in resp.getheaders()}
+            if "x-frame-options" not in _resp_headers_lower:
+                self.send_header("X-Frame-Options", "DENY")
+            if "x-content-type-options" not in _resp_headers_lower:
+                self.send_header("X-Content-Type-Options", "nosniff")
+            if "referrer-policy" not in _resp_headers_lower:
+                self.send_header("Referrer-Policy", "same-origin")
             # Close after each response: avoids keep-alive framing edge cases
             # behind the OpenHost router.
             self.send_header("Connection", "close")

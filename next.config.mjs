@@ -27,6 +27,8 @@ const nextConfig = {
   // Emit a self-contained server bundle so the runtime image is small and
   // starts fast (no full node_modules copy needed at runtime).
   output: 'standalone',
+  // Do not advertise the framework in response headers.
+  poweredByHeader: false,
   images: {
     remotePatterns,
   },
