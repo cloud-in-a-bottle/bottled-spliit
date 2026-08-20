@@ -61,6 +61,11 @@ public_paths = [
 
 [resources]
 memory_mb = 1024
+# Measured clean --no-cache build peak ~7263 MiB (7.09 GiB), from a
+# Next.js production build (npm run build). Runtime memory_mb (1024) is
+# lower, so without an explicit build cap the build can OOM. Sized to the
+# measured peak rounded up to the next 0.5 GiB.
+build_memory_mb = 7680
 cpu_cores = 1.0
 
 [data]
