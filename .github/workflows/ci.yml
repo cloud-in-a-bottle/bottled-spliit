@@ -34,3 +34,6 @@ jobs:
 
       - name: Check Prettier formatting
         run: npm run check-formatting
+
+  test:
+    uses: cloud-in-a-bottle/app-template/.github/workflows/app-test.yml@main

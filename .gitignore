@@ -43,3 +43,5 @@ pgdata
 
 # openhost local test artifacts
 /tmp-appdata
+.venv/
+__pycache__/
