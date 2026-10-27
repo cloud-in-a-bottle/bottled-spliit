@@ -39,9 +39,21 @@ next-env.d.ts
 
 # db
 postgres-data
-pgdata
 
-# openhost local test artifacts
+# prisma generated client (regenerated via `prisma generate`)
+/src/generated
+
+# playwright
+/test-results/
+/playwright-report/
+/blob-report/
+/playwright/.cache/
+
+# performance suite output (perf/run.ts)
+/perf-report.json
+
+# Cloud in a Bottle packaging: local db / test artifacts
+pgdata
 /tmp-appdata
 .venv/
 __pycache__/
