@@ -33,7 +33,7 @@ session table to seed, so the Cloud in a Bottle integration is deliberately simp
 - **Sharing** works exactly like upstream Spliit: the owner shares a group
   URL, and anyone with that link can open, view, and edit the group without
   a Cloud in a Bottle account. The group pages and the API / static assets they need
-  are declared as `public_paths` in `openhost.toml` so the Cloud in a Bottle router
+  are declared as `public_paths` in `cloudinabottle.toml` so the Cloud in a Bottle router
   lets those requests through without `zone_auth`.
 
 Because group IDs are unguessable nanoids, "knowing the URL" is the sharing
@@ -42,7 +42,7 @@ credential, this matches the public hosted Spliit at spliit.app. Creating a
 below): unlike the public hosted Spliit, an anonymous visitor cannot spin up
 new groups on your instance. If you want a fully private instance (no
 anonymous access at all), remove the `/groups/` and `/api/` entries from
-`openhost.toml`'s `public_paths`; the owner will still have full access, but
+`cloudinabottle.toml`'s `public_paths`; the owner will still have full access, but
 group links will only work for `zone_auth`'d visitors.
 
 ### The auth-proxy
@@ -84,10 +84,10 @@ above to lock it down further).
 
 ```
 Dockerfile            multi-stage build: Next standalone + bundled Postgres
-openhost.toml         OpenHost manifest (routing, resources, public paths)
+cloudinabottle.toml   Cloud in a Bottle manifest (routing, resources, public paths)
 openhost/start.sh     supervisor: Postgres -> migrations -> Next -> proxy
 openhost/auth_proxy.py  SSO/front-door proxy (see above)
-src/, prisma/, ...    vendored upstream Spliit source (MIT)
+src/, prisma/, ...    upstream Spliit source (MIT), merged from upstream
 ```
 
 ## Local development
@@ -96,6 +96,24 @@ The upstream project's own tooling still works (`npm run dev`, `npm test`).
 To exercise the exact production stack the Cloud in a Bottle container runs, build the
 image and run it with an `OPENHOST_APP_DATA_DIR` bind mount; the container
 brings up Postgres, applies migrations, and serves the app on port 8080.
+
+## Syncing with upstream
+
+Upstream [spliit-app/spliit](https://github.com/spliit-app/spliit) is a git ancestor of this repo, so syncing is a plain merge (never a squash or rebase, which would lose that ancestry):
+
+```bash
+git remote add upstream https://github.com/spliit-app/spliit.git  # once
+git fetch upstream
+git checkout -b sync-upstream-<date> main
+git merge upstream/main
+```
+
+Resolve conflicts by taking upstream for app code, `package.json` and the lockfile, and keeping the packaging layer (`Dockerfile`, `cloudinabottle.toml`, `openhost/`, `NOTICE`, this README, `pyproject.toml`/`uv.lock`/`tests/`, `.github/workflows/ci.yml`) ours, adapted to whatever upstream changed. Regenerate `package-lock.json` with the npm that CI uses rather than hand-merging it. Open a PR and merge it with a **merge commit**.
+
+Deliberate differences from upstream, to re-check on each sync:
+
+- `package.json` pins `next` and `zod` at least to the versions that fix open security alerts, where upstream's range or lockfile is still older.
+- `compose.yaml`, `container.env.example`, `scripts/build-image.sh`, `scripts/container-entrypoint.sh` and `.github/workflows/perf.yml` are removed: they target upstream's image (external Postgres, port 3000), not this one. Upstream's `e2e.yml` and `cd.yml` are kept but only run on tags or manual dispatch.
 
 ## Credits
 
