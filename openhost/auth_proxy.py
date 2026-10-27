@@ -76,8 +76,8 @@ OWNER_HEADER = "X-OpenHost-Is-Owner"
 # Matching is exact or exact-prefix ("/groups/create" and
 # "/groups/create/..."), so a group whose id happened to start with
 # "create" is not affected (nanoid ids never equal these fixed segments).
-OWNER_ONLY_EXACT = {"/groups"}
-OWNER_ONLY_PREFIXES = ("/groups/nothing/",)
+OWNER_ONLY_EXACT = {"/groups", "/groups/create"}
+OWNER_ONLY_PREFIXES = ("/groups/create/",)
 
 # Creating a *new* group is an owner-only action. The create UI page is
 # gated above, but the mutation it fronts (tRPC `groups.create`) is reachable
@@ -91,7 +91,7 @@ OWNER_ONLY_PREFIXES = ("/groups/nothing/",)
 # All OTHER group operations (reads, expense add/edit/delete, balances, etc.)
 # stay public so anyone with a shared group link can use the group fully --
 # matching upstream Spliit's link-sharing model.
-OWNER_ONLY_TRPC_PROCEDURES = ("groups.nothing",)
+OWNER_ONLY_TRPC_PROCEDURES = ("groups.create",)
 TRPC_PREFIX = "/api/trpc/"
 
 # Hop-by-hop headers must not be forwarded (RFC 7230 6.1).
