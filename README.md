@@ -110,6 +110,8 @@ git merge upstream/main
 
 Resolve conflicts by taking upstream for app code, `package.json` and the lockfile, and keeping the packaging layer (`Dockerfile`, `cloudinabottle.toml`, `openhost/`, `NOTICE`, this README, `pyproject.toml`/`uv.lock`/`tests/`, `.github/workflows/ci.yml`) ours, adapted to whatever upstream changed. Regenerate `package-lock.json` with the npm that CI uses rather than hand-merging it. Open a PR and merge it with a **merge commit**.
 
+CI checks the access rules our layer adds (`tests/test_access.py`: anyone with a group link can open and use the group; only the owner can create groups or see the recent-groups list). Because everything upstream adds under `/groups/` or `/api/` is public by default, `tests/test_route_inventory.py` lists every page, API route, tRPC procedure and server action as reviewed public or owner-only, and fails when upstream adds or moves one: decide who may reach it, and gate it in `openhost/auth_proxy.py` (with a test) if it's owner-only.
+
 Deliberate differences from upstream, to re-check on each sync:
 
 - `package.json` pins `next` and `zod` at least to the versions that fix open security alerts, where upstream's range or lockfile is still older.
