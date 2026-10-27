@@ -10,7 +10,8 @@ from pathlib import Path
 
 SRC = Path(__file__).resolve().parent.parent / "src"
 
-# Reached only by the owner: "/" by the router (not in public_paths), the rest by auth_proxy.py.
+# Reached only by the owner: "/" and "/groups" are gated by the router (not under a public_paths prefix; auth_proxy.py
+# also gates "/groups"), the others by auth_proxy.py.
 OWNER_ONLY = {
     "app/page.tsx",
     "app/groups/page.tsx",

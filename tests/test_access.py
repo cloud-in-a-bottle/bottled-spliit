@@ -12,6 +12,7 @@ import time
 import uuid
 from collections.abc import Callable
 from typing import Any
+from urllib.parse import parse_qs
 from urllib.parse import urlsplit
 
 import pytest
@@ -87,6 +88,9 @@ def _assert_login_redirect(stack: OpenhostStack, response: requests.Response) ->
     assert (location.scheme, location.netloc, location.path) == (router.scheme, router.netloc, "/login"), (
         f"redirect should go to {stack.router_url}/login: {_context(stack, response)}"
     )
+    assert parse_qs(location.query).get("next") == [response.url], (
+        f"login should return to the requested page: {_context(stack, response)}"
+    )
 
 
 @pytest.mark.parametrize(("path", "title"), [("/groups/create", "Create group"), ("/groups", "Recent groups")])
@@ -146,8 +150,8 @@ def test_anonymous_can_use_shared_group_link(stack: OpenhostStack, group: dict[s
 
 @pytest.mark.parametrize("path", ["/", "/groups", "/groups/create", "/groups/create/"])
 def test_anonymous_is_sent_to_login_from_owner_pages(stack: OpenhostStack, group: dict[str, str], path: str) -> None:
-    # `group` makes sure the app is up. "/" is gated by the router (it's not in public_paths); the others sit under
-    # the public "/groups/" prefix and are re-gated by the auth proxy.
+    # `group` makes sure the app is up. "/" and "/groups" are gated by the router (they're not under a public_paths
+    # prefix); the others sit under the public "/groups/" prefix and are re-gated by the auth proxy.
     response = requests.get(f"{stack.url}{path}", headers=HTML, timeout=30, allow_redirects=False)
     _assert_login_redirect(stack, response)
 
