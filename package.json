@@ -33,7 +33,7 @@
   "dependencies": {
     "@aws-sdk/client-s3": "^3.1110.0",
     "@formatjs/intl-localematcher": "^0.9.0",
-    "@hookform/resolvers": "^5",
+    "@hookform/resolvers": "^6",
     "@json2csv/plainjs": "^7.0.8",
     "@prisma/adapter-pg": "^7.10.0",
     "@prisma/client": "^7.10.0",
