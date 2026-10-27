@@ -54,7 +54,7 @@
     "next13-progressbar": "^1.1.1",
     "openai": "^4.25.0",
     "pg": "^8.11.3",
-    "prisma": "^6.19.3",
+    "prisma": "^7.10.1",
     "react": "^19.2.1",
     "react-dom": "^19.2.1",
     "react-hook-form": "^7.68.0",
