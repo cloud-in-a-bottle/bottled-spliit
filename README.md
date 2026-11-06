@@ -117,7 +117,7 @@ CI checks the access rules our layer adds (`tests/test_access.py`: anyone with a
 Deliberate differences from upstream, to re-check on each sync:
 
 - `package.json` pins `next` and `zod` at least to the versions that fix open security alerts, where upstream's range or lockfile is still older.
-- `compose.yaml`, `container.env.example`, `scripts/build-image.sh`, `scripts/container-entrypoint.sh` and `.github/workflows/perf.yml` are removed: they target upstream's image (external Postgres, port 3000), not this one. Upstream's `e2e.yml` and `cd.yml` are kept but only run on tags or manual dispatch.
+- `compose.yaml`, `container.env.example`, `scripts/build-image.sh`, `scripts/container-entrypoint.sh` and `.github/workflows/perf.yml` are removed: they target upstream's image (external Postgres, port 3000), not this one. Upstream's `cd.yml` (a ghcr image built on tags) is removed too: our image comes from `ci.yml`. Upstream's `e2e.yml` is kept but only runs on manual dispatch.
 
 ## Credits
 
