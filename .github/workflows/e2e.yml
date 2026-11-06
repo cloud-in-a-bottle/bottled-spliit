@@ -1,12 +1,8 @@
 name: E2E
 
-# Manually, or on release tags -- the same trigger as the Docker image build in
-# cd.yml. The app under test is built from this checkout, so this workflow is
-# independent of cd.yml and does not wait for the image to be published.
+# Manually only. The app under test is built from this checkout.
 on:
   workflow_dispatch:
-  push:
-    tags: ['*']
 
 concurrency:
   group: e2e-${{ github.ref }}

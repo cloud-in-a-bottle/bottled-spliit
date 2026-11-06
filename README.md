@@ -97,6 +97,8 @@ To exercise the exact production stack the Cloud in a Bottle container runs, bui
 image and run it with an `OPENHOST_APP_DATA_DIR` bind mount; the container
 brings up Postgres, applies migrations, and serves the app on port 8080.
 
+`cloudinabottle.toml` sets `prebuilt_image`, so Cloud in a Bottle pulls our signed prebuilt image (built by CI from each release tag) instead of building the Dockerfile. To fork and modify this app, comment out `prebuilt_image` so your instance builds from source.
+
 ## Syncing with upstream
 
 Upstream [spliit-app/spliit](https://github.com/spliit-app/spliit) is a git ancestor of this repo, so syncing is a plain merge (never a squash or rebase, which would lose that ancestry):
@@ -115,7 +117,7 @@ CI checks the access rules our layer adds (`tests/test_access.py`: anyone with a
 Deliberate differences from upstream, to re-check on each sync:
 
 - `package.json` pins `next` and `zod` at least to the versions that fix open security alerts, where upstream's range or lockfile is still older.
-- `compose.yaml`, `container.env.example`, `scripts/build-image.sh`, `scripts/container-entrypoint.sh` and `.github/workflows/perf.yml` are removed: they target upstream's image (external Postgres, port 3000), not this one. Upstream's `e2e.yml` and `cd.yml` are kept but only run on tags or manual dispatch.
+- `compose.yaml`, `container.env.example`, `scripts/build-image.sh`, `scripts/container-entrypoint.sh` and `.github/workflows/perf.yml` are removed: they target upstream's image (external Postgres, port 3000), not this one. Upstream's `cd.yml` (a ghcr image built on tags) is removed too: our image comes from `ci.yml`. Upstream's `e2e.yml` is kept but only runs on manual dispatch.
 
 ## Credits
 
