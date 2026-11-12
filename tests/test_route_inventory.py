@@ -17,6 +17,8 @@ OWNER_ONLY = {
     "app/groups/page.tsx",
     "app/groups/create/page.tsx",
     "trpc/routers/groups/create.procedure.ts",
+    # Presigns uploads to the owner's S3 bucket when S3 is configured (off by default).
+    "app/api/s3-upload/route.ts",
 }
 
 # Anyone with a group link: the group pages and everything they call, plus static metadata and health checks.
@@ -29,8 +31,6 @@ PUBLIC = {
     "app/api/health/readiness/route.ts",
     # Needs CRON_SECRET (404 without it, which is our default).
     "app/api/cron/purge-deleted-groups/route.ts",
-    # Presigns uploads when S3 is configured (off by default); see bottled-spliit#5.
-    "app/api/s3-upload/route.ts",
     "app/api/trpc/[trpc]/route.ts",
     "app/groups/[groupId]/page.tsx",
     "app/groups/[groupId]/activity/page.tsx",
