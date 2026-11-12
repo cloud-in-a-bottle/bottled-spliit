@@ -106,7 +106,7 @@
     "@types/react-dom": "^19",
     "babel-plugin-react-compiler": "^1.0.0",
     "currency-list": "^1.0.8",
-    "dotenv": "^18.0.9",
+    "dotenv": "^18.0.10",
     "jest": "^30.5.2",
     "jest-environment-jsdom": "^30.5.2",
     "oxlint": "^1.92.0",
