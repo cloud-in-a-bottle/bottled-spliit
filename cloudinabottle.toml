@@ -1,6 +1,6 @@
 [app]
 name = "spliit"
-version = "1.0.1"
+version = "1.0.2"
 description = "Spliit — a minimalist shared-expense / bill-splitting app, packaged for Cloud in a Bottle with owner SSO and public group-link sharing."
 authors = ["Andrew Laack <andrew@laack.co>"]
 
