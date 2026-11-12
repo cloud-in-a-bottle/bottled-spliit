@@ -64,6 +64,9 @@ ZONE_DOMAIN = os.environ.get("OPENHOST_ZONE_DOMAIN", "")
 # zone_auth'd owner (even on public paths). Absence of it => anonymous
 # visitor who reached us via a public_paths entry.
 OWNER_HEADER = "X-OpenHost-Is-Owner"
+# The router's base URL on the domain the request arrived on. Like every
+# X-OpenHost-* header, the router strips any client-sent copy.
+ROUTER_URL_HEADER = "X-OpenHost-Router-URL"
 
 # Owner-only paths that must be gated even though they sit *under* a public
 # prefix in openhost.toml. The router's public-path matching is
@@ -225,16 +228,21 @@ class ProxyHandler(BaseHTTPRequestHandler):
 
     def _bounce_to_login(self) -> None:
         """Redirect an anonymous visitor on an owner-only path to OpenHost
-        login. Uses the zone login the router itself would use."""
+        login, the way the router itself does for its private paths: to the
+        router on the scheme and domain the request arrived on (the router
+        sends that as X-OpenHost-Router-URL; it's http on a dev router or a
+        `.local` domain), with `next` pointing back at the requested page."""
+        router_url = self.headers.get(ROUTER_URL_HEADER, "").rstrip("/")
+        if not router_url and ZONE_DOMAIN:
+            router_url = f"https://{ZONE_DOMAIN}"
+        target = f"{router_url}/login"
         forwarded_host = self.headers.get("X-Forwarded-Host") or self.headers.get(
             "Host", ""
         )
-        if ZONE_DOMAIN:
-            target = f"https://{ZONE_DOMAIN}/login"
-        elif forwarded_host:
-            target = f"https://{forwarded_host}/login"
-        else:
-            target = "/login"
+        if forwarded_host:
+            proto = self.headers.get("X-Forwarded-Proto") or "https"
+            next_url = f"{proto}://{forwarded_host}{self.path}"
+            target += "?next=" + urllib.parse.quote(next_url, safe="")
         body = b""
         self.send_response(302)
         self.send_header("Location", target)
@@ -338,6 +346,16 @@ class ProxyHandler(BaseHTTPRequestHandler):
                 self.send_header(key, value)
             if self.command != "HEAD":
                 self.send_header("Content-Length", str(len(payload)))
+            # Security headers: Next.js does not send these by default.
+            # Use the ? pattern (only set if not already present in the
+            # upstream response) so a future Next.js version can override.
+            _resp_headers_lower = {k.lower() for k, _ in resp.getheaders()}
+            if "x-frame-options" not in _resp_headers_lower:
+                self.send_header("X-Frame-Options", "DENY")
+            if "x-content-type-options" not in _resp_headers_lower:
+                self.send_header("X-Content-Type-Options", "nosniff")
+            if "referrer-policy" not in _resp_headers_lower:
+                self.send_header("Referrer-Policy", "same-origin")
             # Close after each response: avoids keep-alive framing edge cases
             # behind the OpenHost router.
             self.send_header("Connection", "close")

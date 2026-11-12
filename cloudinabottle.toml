@@ -1,11 +1,14 @@
 [app]
 name = "spliit"
-version = "0.1.0"
-description = "Spliit — a minimalist shared-expense / bill-splitting app, packaged for OpenHost with owner SSO and public group-link sharing."
+version = "1.0.2"
+description = "Spliit — a minimalist shared-expense / bill-splitting app, packaged for Cloud in a Bottle with owner SSO and public group-link sharing."
 authors = ["Andrew Laack <andrew@laack.co>"]
 
 [runtime.container]
 image = "Dockerfile"
+# Cloud in a Bottle pulls this signed prebuilt image (built from the release tag's commit by CI) instead of building
+# `image`. If you fork this app and change it, comment this line out so your instance builds `image` instead.
+prebuilt_image = "registry.cloudinabottle.org/bottled-spliit"
 port = 8080
 
 [routing]
@@ -61,7 +64,12 @@ public_paths = [
 
 [resources]
 memory_mb = 1024
-cpu_millicores = 1000
+# Measured clean --no-cache build peak ~7263 MiB (7.09 GiB), from a
+# Next.js production build (npm run build). Runtime memory_mb (1024) is
+# lower, so without an explicit build cap the build can OOM. Sized to the
+# measured peak rounded up to the next 0.5 GiB.
+build_memory_mb = 7680
+cpu_cores = 1.0
 
 [data]
 app_data = true

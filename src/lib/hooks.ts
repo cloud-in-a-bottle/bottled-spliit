@@ -1,4 +1,3 @@
-import dayjs from 'dayjs'
 import { useEffect, useState } from 'react'
 import useSWR, { Fetcher } from 'swr'
 
@@ -67,11 +66,14 @@ export function useActiveUser(groupId?: string) {
   return activeUser
 }
 
-interface FrankfurterAPIResponse {
-  base: string
+// One entry per quoted currency. The v2 API sends back the requested date when
+// it has a rate for it, and the latest available date for a future one.
+type FrankfurterAPIResponse = {
   date: string
-  rates: Record<string, number>
-}
+  base: string
+  quote: string
+  rate: number
+}[]
 
 const fetcher: Fetcher<FrankfurterAPIResponse> = (url: string) =>
   fetch(url).then(async (res) => {
@@ -85,33 +87,36 @@ export function useCurrencyRate(
   baseCurrency: string,
   targetCurrency: string,
 ) {
-  const dateString = dayjs(date).format('YYYY-MM-DD')
+  const isValidDate = !isNaN(date.getTime())
+  // `date` is a date-only value carried at UTC midnight (that is what both the
+  // date picker and the DATE column produce), so it has to be read back in UTC.
+  // Formatting it locally would ask for the previous day west of UTC.
+  const dateString = isValidDate ? date.toISOString().slice(0, 10) : ''
 
   // Only send request if both currency codes are given and not the same
   const url =
-    !isNaN(date.getTime()) &&
+    isValidDate &&
     !!baseCurrency.length &&
     !!targetCurrency.length &&
     baseCurrency !== targetCurrency &&
-    `https://api.frankfurter.app/${dateString}?base=${baseCurrency}`
+    `https://api.frankfurter.dev/v2/rates?date=${dateString}&base=${baseCurrency}&quotes=${targetCurrency}`
   const { data, error, isLoading, mutate } = useSWR<FrankfurterAPIResponse>(
     url,
     fetcher,
     { shouldRetryOnError: false, revalidateOnFocus: false },
   )
 
-  if (data) {
-    let exchangeRate = undefined
+  // An empty list means there is no rate for that date, e.g. a date before the
+  // currency is covered.
+  const rate = data?.find(({ quote }) => quote === targetCurrency)
+  if (rate) {
     let sentError = error
-    if (!error && data.date !== dateString) {
+    if (!error && rate.date !== dateString) {
       // this happens if for example, the requested date is in the future.
-      sentError = new RangeError(data.date)
-    }
-    if (data.rates[targetCurrency]) {
-      exchangeRate = data.rates[targetCurrency]
+      sentError = new RangeError(rate.date)
     }
     return {
-      data: exchangeRate,
+      data: rate.rate,
       error: sentError,
       isLoading,
       refresh: mutate,
@@ -119,7 +124,7 @@ export function useCurrencyRate(
   }
 
   return {
-    data,
+    data: undefined,
     error,
     isLoading,
     refresh: mutate,

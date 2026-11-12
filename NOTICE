@@ -1,0 +1,15 @@
+NOTICE
+
+This Cloud in a Bottle application packages the Spliit software.
+
+Upstream project:
+  Spliit (https://github.com/spliit-app/spliit)
+  Copyright (c) 2023 Sebastien Castiel
+  Licensed under the MIT License
+  Source: https://github.com/spliit-app/spliit
+
+Packaging (Cloud in a Bottle integration layer):
+  The files added by this repository for Cloud in a Bottle integration
+  (openhost.toml, openhost/start.sh, openhost/auth_proxy.py, Dockerfile
+  modifications) are original work by the authors listed in openhost.toml
+  and are licensed under the same MIT License as the upstream project.

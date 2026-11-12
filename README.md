@@ -1,12 +1,12 @@
-# openhost-spliit
+# bottled-spliit
 
-[Spliit](https://github.com/spliit-app/spliit) — a minimalist, account-free
-app for sharing expenses with friends and family — packaged as a single,
-self-contained [OpenHost](https://openhost.ai) application.
+[Spliit](https://github.com/spliit-app/spliit), a minimalist, account-free
+app for sharing expenses with friends and family, packaged as a single,
+self-contained [Cloud in a Bottle](https://openhost.ai) application.
 
 This repo vendors the upstream Spliit source (MIT-licensed) and adds an
-OpenHost integration layer: a bundled PostgreSQL database, a supervisor
-script, and a small auth-proxy that terminates OpenHost SSO / owner-gating.
+Cloud in a Bottle integration layer: a bundled PostgreSQL database, a supervisor
+script, and a small auth-proxy that terminates Cloud in a Bottle SSO / owner-gating.
 
 ## What you get
 
@@ -14,9 +14,9 @@ script, and a small auth-proxy that terminates OpenHost SSO / owner-gating.
   (even split, by shares, by percentage, by amount), reimbursements,
   recurring expenses, balances, "who owes whom" suggested reimbursements,
   activity log, stats, per-group settings, and CSV / JSON export.
-- A bundled PostgreSQL 16 database. Nothing external to provision — all
-  data lives on the OpenHost persistent volume.
-- OpenHost single-sign-on for the instance owner and public, no-login
+- A bundled PostgreSQL 16 database. Nothing external to provision; all
+  data lives on the Cloud in a Bottle persistent volume.
+- Cloud in a Bottle single-sign-on for the instance owner and public, no-login
   sharing of individual groups by link.
 
 ## Auth model
@@ -24,34 +24,34 @@ script, and a small auth-proxy that terminates OpenHost SSO / owner-gating.
 Spliit intentionally has **no user accounts**. A group is reached purely by
 its unguessable URL (`/groups/<nanoid>...`), and "which participant am I"
 is a browser-local setting. There is no login form to auto-fill and no
-session table to seed, so the OpenHost integration is deliberately simple:
+session table to seed, so the Cloud in a Bottle integration is deliberately simple:
 
-- **The instance owner** reaches the app through OpenHost `zone_auth`. The
-  OpenHost router gates everything that is not explicitly listed as public,
+- **The instance owner** reaches the app through Cloud in a Bottle `zone_auth`. The
+  Cloud in a Bottle router gates everything that is not explicitly listed as public,
   so only the owner can see the app shell, the recently-visited-groups list,
   and the "create group" page.
 - **Sharing** works exactly like upstream Spliit: the owner shares a group
   URL, and anyone with that link can open, view, and edit the group without
-  an OpenHost account. The group pages and the API / static assets they need
-  are declared as `public_paths` in `openhost.toml` so the OpenHost router
+  a Cloud in a Bottle account. The group pages and the API / static assets they need
+  are declared as `public_paths` in `cloudinabottle.toml` so the Cloud in a Bottle router
   lets those requests through without `zone_auth`.
 
 Because group IDs are unguessable nanoids, "knowing the URL" is the sharing
-credential — this matches the public hosted Spliit at spliit.app. Creating a
+credential, this matches the public hosted Spliit at spliit.app. Creating a
 *new* group, however, is restricted to the owner (see the auth-proxy section
 below): unlike the public hosted Spliit, an anonymous visitor cannot spin up
 new groups on your instance. If you want a fully private instance (no
 anonymous access at all), remove the `/groups/` and `/api/` entries from
-`openhost.toml`'s `public_paths`; the owner will still have full access, but
+`cloudinabottle.toml`'s `public_paths`; the owner will still have full access, but
 group links will only work for `zone_auth`'d visitors.
 
 ### The auth-proxy
 
 `openhost/auth_proxy.py` is a small HTTP proxy in front of the Next.js
 server. It never mints cookies and never touches disk. Most gating is done by
-the OpenHost router (via `public_paths`); the proxy's jobs are:
+the Cloud in a Bottle router (via `public_paths`); the proxy's jobs are:
 
-1. Serve `/_healthz` with a static 200 for the OpenHost health check.
+1. Serve `/_healthz` with a static 200 for the Cloud in a Bottle health check.
 2. Rewrite the upstream `Host` header from `X-Forwarded-Host` and keep the
    `Origin` header consistent so Next.js Server Action mutations are
    accepted (Next rejects forwarded actions whose `Origin` host does not
@@ -65,9 +65,9 @@ the OpenHost router (via `public_paths`); the proxy's jobs are:
    `/api/s3-upload` presign handler (which mints presigned uploads to the
    owner's S3 bucket). For those specific paths the proxy checks the
    router-stamped `X-OpenHost-Is-Owner` header and either bounces anonymous
-   visitors to the OpenHost login (pages) or returns a 403 (the API
-   endpoints). Everything else a shared group needs — reading a group,
-   adding/editing/deleting expenses, balances, stats, export — stays public
+   visitors to the Cloud in a Bottle login (pages) or returns a 403 (the API
+   endpoints). Everything else a shared group needs, reading a group,
+   adding/editing/deleting expenses, balances, stats, export, stays public
    so anyone with the link can use the group fully.
 
 The proxy reads each request and upstream response body fully into memory and
@@ -78,7 +78,7 @@ streaming. The bundled database is loopback-only and its password never
 leaves the container.
 
 So the effective model is: **only the zone_auth'd owner can create groups**,
-but the owner can share any group by link and recipients need no OpenHost
+but the owner can share any group by link and recipients need no Cloud in a Bottle
 account (see the "fully private instance" note in the Auth model section
 above to lock it down further).
 
@@ -86,21 +86,48 @@ above to lock it down further).
 
 ```
 Dockerfile            multi-stage build: Next standalone + bundled Postgres
-openhost.toml         OpenHost manifest (routing, resources, public paths)
+cloudinabottle.toml   Cloud in a Bottle manifest (routing, resources, public paths)
 openhost/start.sh     supervisor: Postgres -> migrations -> Next -> proxy
 openhost/auth_proxy.py  SSO/front-door proxy (see above)
-src/, prisma/, ...    vendored upstream Spliit source (MIT)
+src/, prisma/, ...    upstream Spliit source (MIT), merged from upstream
 ```
 
 ## Local development
 
 The upstream project's own tooling still works (`npm run dev`, `npm test`).
-To exercise the exact production stack the OpenHost container runs, build the
+To exercise the exact production stack the Cloud in a Bottle container runs, build the
 image and run it with an `OPENHOST_APP_DATA_DIR` bind mount; the container
 brings up Postgres, applies migrations, and serves the app on port 8080.
+
+`cloudinabottle.toml` sets `prebuilt_image`, so Cloud in a Bottle pulls our signed prebuilt image (built by CI from each release tag) instead of building the Dockerfile. To fork and modify this app, comment out `prebuilt_image` so your instance builds from source.
+
+## Syncing with upstream
+
+Upstream [spliit-app/spliit](https://github.com/spliit-app/spliit) is a git ancestor of this repo, so syncing is a plain merge (never a squash or rebase, which would lose that ancestry):
+
+```bash
+git remote add upstream https://github.com/spliit-app/spliit.git  # once
+git fetch upstream
+git checkout -b sync-upstream-<date> main
+git merge upstream/main
+```
+
+Resolve conflicts by taking upstream for app code, `package.json` and the lockfile, and keeping the packaging layer (`Dockerfile`, `cloudinabottle.toml`, `openhost/`, `NOTICE`, this README, `pyproject.toml`/`uv.lock`/`tests/`, `.github/workflows/ci.yml`) ours, adapted to whatever upstream changed. Regenerate `package-lock.json` with the npm that CI uses rather than hand-merging it. Open a PR and merge it with a **merge commit**.
+
+CI checks the access rules our layer adds (`tests/test_access.py`: anyone with a group link can open and use the group; only the owner can create groups or see the recent-groups list). Because everything upstream adds under `/groups/` or `/api/` is public by default, `tests/test_route_inventory.py` lists every page, API route, tRPC procedure and server action as reviewed public or owner-only, and fails when upstream adds or moves one: decide who may reach it, and gate it in `openhost/auth_proxy.py` (with a test) if it's owner-only.
+
+Deliberate differences from upstream, to re-check on each sync:
+
+- `package.json` pins `next` and `zod` at least to the versions that fix open security alerts, where upstream's range or lockfile is still older.
+- `compose.yaml`, `container.env.example`, `scripts/build-image.sh`, `scripts/container-entrypoint.sh` and `.github/workflows/perf.yml` are removed: they target upstream's image (external Postgres, port 3000), not this one. Upstream's `cd.yml` (a ghcr image built on tags) is removed too: our image comes from `ci.yml`. Upstream's `e2e.yml` is kept but only runs on manual dispatch.
 
 ## Credits
 
 Spliit is created by [Sebastien Castiel](https://github.com/scastiel) and
 contributors, and is MIT-licensed (see `LICENSE`). This repo only adds the
-OpenHost packaging layer.
+Cloud in a Bottle packaging layer.
+
+## License
+
+Spliit and this Cloud in a Bottle packaging are both MIT-licensed. See `LICENSE`
+and `NOTICE` for details.
