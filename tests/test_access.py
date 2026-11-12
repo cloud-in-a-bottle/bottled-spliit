@@ -183,3 +183,12 @@ def test_anonymous_cannot_create_group(stack: OpenhostStack, group: dict[str, st
         assert response.status_code in (401, 403) and "groupId" not in response.text, (
             f"anonymous group creation ({label}) should be refused: {_context(stack, response)}"
         )
+
+
+@pytest.mark.parametrize("path", ["/api/s3-upload", "/api/s3-upload/", "/api/s3%2Dupload"])
+def test_anonymous_cannot_presign_uploads(stack: OpenhostStack, path: str) -> None:
+    # next-s3-upload's handler mints presigned PUTs to the owner's S3 bucket; auth_proxy.py answers anonymous callers
+    # itself, so the 403 doesn't depend on whether S3 is configured.
+    body = {"filename": "spam.png", "filetype": "image/png", "_nextS3": {"strategy": "presigned"}}
+    response = requests.post(f"{stack.url}{path}", json=body, timeout=30, allow_redirects=False)
+    assert response.status_code == 403, f"anonymous presign at {path} should be refused: {_context(stack, response)}"
